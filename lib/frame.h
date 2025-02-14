@@ -1,7 +1,5 @@
 #pragma once
 
-#include <sys/types.h>
-
 class Frame
 {
 public:

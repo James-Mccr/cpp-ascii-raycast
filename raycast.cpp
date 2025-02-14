@@ -1,7 +1,6 @@
 /* A prototype for making raycast games in a console */
 
 #include <math.h>
-#include <vector>
 #include "lib/frame.h"
 #include "lib/game.h"
 #include "lib/grid.h"
