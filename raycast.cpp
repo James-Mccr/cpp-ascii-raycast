@@ -88,11 +88,6 @@ class MapToGrid
     public:
     void Translate(const Player& player, const Map& map)
     {
-        double rayX = player.x;
-        double rayY = player.y;
-        double distToSideX = 0;
-        double distToSideY = 0;
-
         for (int x = 0; x < grid.GetWidth(); x++)
         {
             //calculate ray position and direction
@@ -146,14 +141,14 @@ class MapToGrid
             {
                 if (distX < distY)
                 {
-                    // will hit X grid first
+                    // East/West
                     distX += ratioDistanceToX;
                     mapX += stepX;
                     side = 0;
                 }
                 else
                 {
-                    // will hit Y grid first
+                    // North/South
                     distY += ratioDistanceToY;
                     mapY += stepY;
                     side = 1;
@@ -171,9 +166,22 @@ class MapToGrid
             if (hit)
             {
                 double perpWallDist = 0;
-                if(side == 0) perpWallDist = (distX - ratioDistanceToX);
-                else          perpWallDist = (distY - ratioDistanceToY);
-
+                double edgeCollision = 0;
+                // dist overshoots by 1 unit, subtract by ratioDist to align with near-side
+                if(side == 0) 
+                {
+                    perpWallDist = (distX - ratioDistanceToX); 
+                    edgeCollision = perpWallDist * rayDirY + player.y;
+                }
+                else
+                {
+                    perpWallDist = (distY - ratioDistanceToY);
+                    edgeCollision = perpWallDist * rayDirX + player.x;
+                }
+                
+                edgeCollision -= int(edgeCollision);
+                bool corner = edgeCollision <= lowerEdgeThreshold || edgeCollision >= upperEdgeThreshold;
+                
                 //Calculate height of line to draw on screen
                 int h = grid.GetHeight();
                 int lineHeight = (int)(h / perpWallDist);
@@ -188,10 +196,13 @@ class MapToGrid
                     str[i] = ceiling;
 
                 char c;
-                if (side == 0)
+                if (corner)
+                    c = edge;
+                else if (side == 0)
                     c = perpWallDist > 7 ? wallEWFar : wallEW;
                 else
                     c = perpWallDist > 7 ? wallNSFar : wallNS;
+                    
                 for(int i = drawStart; i <= drawEnd; i++)
                     str[i] = c;
 
@@ -217,6 +228,9 @@ class MapToGrid
     char wallNSFar = ':';
     char floor = '.';
     char ceiling = ' ';
+    char edge = '|';
+    const double lowerEdgeThreshold = 0.04;
+    const double upperEdgeThreshold = 1-lowerEdgeThreshold;
 };
 
 class Raycast : public Game
